@@ -7,22 +7,22 @@
 
 class string_t {
 private:
-    char* _str      = nullptr;
-    size_t _str_len = 0;
+    char* str_ = nullptr;
+    size_t str_len_ = 0;
 
     void reset() {
-        if (_str != nullptr) {
-            delete[] _str;
-            _str     = nullptr;
-            _str_len = 0;
+        if (str_ != nullptr) {
+            delete[] str_;
+            str_ = nullptr;
+            str_len_ = 0;
         }
     }
 
     const char* alloc_str(size_t len) {
         reset();
-        _str_len = len > MAX_STRING_LEN ? MAX_STRING_LEN : len;
-        _str     = new char[_str_len + 1]();
-        return _str;
+        str_len_ = len > MAX_STRING_LEN ? MAX_STRING_LEN : len;
+        str_ = new char[str_len_ + 1]();
+        return str_;
     }
 
     void copy_str(const char* other) {
@@ -30,7 +30,7 @@ private:
             return;
         size_t len = strlen(other);
         alloc_str(len);
-        strncpy(_str, other, _str_len);
+        strncpy(str_, other, str_len_);
     }
 
 public:
@@ -45,10 +45,10 @@ public:
     }
 
     string_t(string_t&& other) {
-        _str           = other._str;
-        _str_len       = other._str_len;
-        other._str     = nullptr;
-        other._str_len = 0;
+        str_ = other.str_;
+        str_len_ = other.str_len_;
+        other.str_ = nullptr;
+        other.str_len_ = 0;
     }
 
     ~string_t() {
@@ -62,9 +62,9 @@ public:
 
     string_t& operator+=(const char* other) {
         string_t output;
-        output.alloc_str(strlen(other) + _str_len);
-        std::strncpy(output._str, _str, _str_len);
-        std::strncpy(output._str + _str_len, other, output._str_len - _str_len);
+        output.alloc_str(strlen(other) + str_len_);
+        std::strncpy(output.str_, str_, str_len_);
+        std::strncpy(output.str_ + str_len_, other, output.str_len_ - str_len_);
         copy_str(output);
         return *this;
     }
@@ -75,57 +75,57 @@ public:
     }
 
     const char operator[](size_t index) const {
-        if (index >= _str_len)
+        if (index >= str_len_)
             return 0;
-        return _str[index];
+        return str_[index];
     }
 
     bool operator==(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) == 0)
+        if (std::strncmp(str_, other.str_, str_len_) == 0)
             return true;
         return false;
     }
 
     bool operator!=(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) != 0)
+        if (std::strncmp(str_, other.str_, str_len_) != 0)
             return true;
         return false;
     }
 
     bool operator>(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) > 0)
+        if (std::strncmp(str_, other.str_, str_len_) > 0)
             return true;
         return false;
     }
 
     bool operator<(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) < 0)
+        if (std::strncmp(str_, other.str_, str_len_) < 0)
             return true;
         return false;
     }
 
     bool operator>=(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) >= 0)
+        if (std::strncmp(str_, other.str_, str_len_) >= 0)
             return true;
         return false;
     }
 
     bool operator<=(const string_t& other) const {
-        if (std::strncmp(_str, other._str, _str_len) <= 0)
+        if (std::strncmp(str_, other.str_, str_len_) <= 0)
             return true;
         return false;
     }
 
     operator const char*() const {
-        return _str;
+        return str_;
     }
 
     const char* c_str() const {
-        return _str;
+        return str_;
     }
 
     size_t length() const {
-        return _str_len;
+        return str_len_;
     }
 };
 

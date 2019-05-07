@@ -5,12 +5,12 @@
 #include <unordered_set>
 
 class cnf {
-    std::vector<std::vector<int>> _cnf;
-    std::unordered_set<unsigned> _lits;
+    std::vector<std::vector<int>> cnf_;
+    std::unordered_set<unsigned> lits_;
 
     bool unit_prop(std::unordered_set<int>& assignments) {
         std::unordered_set<int> units;
-        for (auto it = _cnf.begin(); it != _cnf.end(); it++)
+        for (auto it = cnf_.begin(); it != cnf_.end(); it++)
             if (it->size() == 1)
                 units.insert(it->front());
         for (auto& unit : units)
@@ -38,9 +38,9 @@ public:
                     for (auto it = tokens.begin(); it != tokens.end() - 1; it++) {
                         int var = std::atoi(it->c_str());
                         clause.push_back(var);
-                        _lits.insert(std::abs(var));
+                        lits_.insert(std::abs(var));
                     }
-                    _cnf.push_back(clause);
+                    cnf_.push_back(clause);
                 }
             }
         }
@@ -51,12 +51,12 @@ public:
             return false;
         if (assignments.find(assignment) != assignments.end())
             return true;
-        _lits.erase(std::abs(assignment));
+        lits_.erase(std::abs(assignment));
         assignments.insert(assignment);
-        for (auto it = _cnf.begin(); it != _cnf.end(); it++) {
+        for (auto it = cnf_.begin(); it != cnf_.end(); it++) {
             for (auto it2 = it->begin(); it2 != it->end();) {
                 if (*it2 == assignment) {
-                    it = _cnf.erase(it) - 1;
+                    it = cnf_.erase(it) - 1;
                     break;
                 } else if (*it2 == -assignment) {
                     it2 = it->erase(it2);
@@ -71,11 +71,11 @@ public:
     }
 
     bool solved() {
-        return _cnf.size() == 0;
+        return cnf_.size() == 0;
     }
 
     const std::unordered_set<unsigned>& lits() {
-        return _lits;
+        return lits_;
     }
 };
 
@@ -95,7 +95,7 @@ bool dpll(cnf c, std::unordered_set<int>& assignments) {
     }
 
     // Try assigning variable -v
-    n      = std::move(c);
+    n = std::move(c);
     t_assn = assignments;
     if (!n.assign(-assn, t_assn))
         return false;

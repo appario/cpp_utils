@@ -4,18 +4,18 @@
 #include "concurrent_queue.h"
 
 class task_system {
-    const unsigned _count{std::thread::hardware_concurrency()};
-    std::vector<std::thread> _threads;
-    std::vector<concurrent_queue<std::function<void()>>> _q{_count};
-    std::atomic<unsigned> _index{0};
+    const unsigned count_{std::thread::hardware_concurrency()};
+    std::vector<std::thread> threads_;
+    std::vector<concurrent_queue<std::function<void()>>> queues_{count_};
+    std::atomic<unsigned> index_{0};
 
     void run(unsigned i) {
         while (true) {
             std::function<void()> f;
-            for (unsigned j = 0; i < _count; i++)
-                if (_q[(i + j) % _count].try_pop(f))
+            for (unsigned j = 0; i < count_; i++)
+                if (queues_[(i + j) % count_].try_pop(f))
                     break;
-            if (!f && !_q[i].wait_and_pop(f))
+            if (!f && !queues_[i].wait_and_pop(f))
                 break;
             try {
                 f();
@@ -26,24 +26,24 @@ class task_system {
 
 public:
     task_system() {
-        for (unsigned i = 0; i < _count; i++)
-            _threads.emplace_back([&, i] { run(i); });
+        for (unsigned i = 0; i < count_; i++)
+            threads_.emplace_back([&, i] { run(i); });
     }
 
     ~task_system() {
-        for (auto& q : _q)
+        for (auto& q : queues_)
             q.stop();
-        for (auto& th : _threads)
+        for (auto& th : threads_)
             th.join();
     }
 
     template <typename F>
     void async(F&& f) {
-        auto i = _index++;
-        for (unsigned j = 0; j < _count * 48; j++)
-            if (_q[(i + j) % _count].try_push(std::forward<F>(f)))
+        auto i = index_++;
+        for (unsigned j = 0; j < count_ * 48; j++)
+            if (queues_[(i + j) % count_].try_push(std::forward<F>(f)))
                 return;
-        _q[_index % _count].push(std::forward<F>(f));
+        queues_[index_ % count_].push(std::forward<F>(f));
     }
 };
 #endif /*TASK_SYSTEM_H*/

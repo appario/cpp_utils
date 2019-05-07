@@ -17,7 +17,7 @@ private:
 public:
     date_t(uint8_t day, uint8_t month, uint32_t year) : date_t() {
         _date.tm_mday = day;
-        _date.tm_mon  = month - 1;
+        _date.tm_mon = month - 1;
         _date.tm_year = year - 1900;
         mktime(&_date);
     }
@@ -28,7 +28,7 @@ public:
         _date = *(localtime(&rawtime));
     }
 
-    date_t(const date_t& date) : date_t(date.day(), date.month(), date.year()) {}
+    date_t(const date_t& date_) : date_t(date_.day(), date_.month(), date_.year()) {}
 
     int day() const {
         return _date.tm_mday;

@@ -10,61 +10,61 @@
 template <typename T>
 class concurrent_queue {
 private:
-    std::queue<T> the_queue;
-    mutable std::mutex the_mutex;
-    std::condition_variable the_condition_variable;
-    bool is_running = true;
+    std::queue<T> queue_;
+    mutable std::mutex mutex_;
+    std::condition_variable cv_;
+    bool running_ = true;
 
 public:
     bool try_push(T const& data) {
         {
-            std::unique_lock<std::mutex> lock{the_mutex, std::try_to_lock};
+            std::unique_lock<std::mutex> lock{mutex_, std::try_to_lock};
             if (!lock)
                 return false;
-            the_queue.emplace_back(data);
+            queue_.emplace_back(data);
         }
-        the_condition_variable.notify_one();
+        cv_.notify_one();
         return true;
     }
 
     void push(T const& data) {
         {
-            std::unique_lock<std::mutex> lock{the_mutex};
-            the_queue.emplace_back(data);
+            std::unique_lock<std::mutex> lock{mutex_};
+            queue_.emplace_back(data);
         }
-        the_condition_variable.notify_one();
+        cv_.notify_one();
     }
 
     bool empty() const {
-        std::unique_lock<std::mutex> lock{the_mutex};
-        return the_queue.empty();
+        std::unique_lock<std::mutex> lock{mutex_};
+        return queue_.empty();
     }
 
     bool try_pop(T& popped_value) {
-        std::unique_lock<std::mutex> lock{the_mutex, std::try_to_lock};
-        if (!lock || the_queue.empty())
+        std::unique_lock<std::mutex> lock{mutex_, std::try_to_lock};
+        if (!lock || queue_.empty())
             return false;
-        popped_value = std::move(the_queue.front());
-        the_queue.pop();
+        popped_value = std::move(queue_.front());
+        queue_.pop();
         return true;
     }
 
     bool wait_and_pop(T& popped_value) {
-        std::unique_lock<std::mutex> lock{the_mutex};
-        the_condition_variable.wait(lock, [&] { return !the_queue.empty() || !is_running; });
-        if (!is_running)
+        std::unique_lock<std::mutex> lock{mutex_};
+        cv_.wait(lock, [&] { return !queue_.empty() || !running_; });
+        if (!running_)
             return false;
-        popped_value = std::move(the_queue.front());
-        the_queue.pop();
+        popped_value = std::move(queue_.front());
+        queue_.pop();
         return true;
     }
 
     void stop() {
         {
-            std::unique_lock<std::mutex> lock{the_mutex};
-            is_running = false;
+            std::unique_lock<std::mutex> lock{mutex_};
+            running_ = false;
         }
-        the_condition_variable.notify_all();
+        cv_.notify_all();
     }
 };
 
